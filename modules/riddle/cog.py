@@ -22,16 +22,31 @@ class RiddleCog(commands.Cog):
         self.used_riddle_ids = [[], []]
         self.currently_puzzling = [False, False]
         self.answer = "Jurgen Schmidhuber" # TODO: Real answer here
+        self.team1_id = int(os.getenv("TEAM1_CHANNEL_ID"))
+        self.team2_id = int(os.getenv("TEAM2_CHANNEL_ID"))
+        self.team3_id = 0
 
         # Google Sheets Authentication and Initialization
-        client = utils.create_gspread_client()
+        self.client = utils.create_gspread_client()
 
-        sheet_key = os.getenv('SHEET_KEY').replace('\'', '')
-        sheet = client.open_by_key(sheet_key).sheet1
-        self.riddles = pd.DataFrame(sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
+        self.sheet_key = os.getenv('SHEET_KEY').replace('\'', '')
+        self.sheet = self.client.open_by_key(self.sheet_key).sheet1
+        self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
         
         # Reload the google sheet every hour
-        bot.loop.create_task(self.reload(bot, sheet_key, client))
+        #bot.loop.create_task(self.reload(bot, self.sheet_key, self.client))
+        bot.loop.create_task(self.reload())
+
+    def get_team(self, channel_id):
+        if channel_id == self.team1_id:
+            team = 0
+        elif channel_id == self.team2_id:
+            team = 1
+        elif channel_id == self.team3_id:
+            team = 2
+        else:
+            team = -1
+        return team
             
     @commands.command(name='startpuzzle')
     async def startpuzzle(self, ctx):
@@ -39,7 +54,7 @@ class RiddleCog(commands.Cog):
         Start your puzzle! You will have 60 seconds per level to solve the riddles
         Usage: >startpuzzle
         """
-        team = utils.get_team(ctx.channel.id)
+        team = self.get_team(ctx.channel.id)
         if team < 0:
             print("Startpuzzle called from an invalid channel!")
             await ctx.send("Cannot start a puzzle from this channel.")
@@ -58,8 +73,10 @@ class RiddleCog(commands.Cog):
         #time.sleep(10)
 
         # Creates the embed containing the riddles for that level as well as updates the IDs we're using and the acceptable answers for the level
-        embed, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(1, self.riddles, self.used_riddle_ids)
-        await ctx.send(embed=embed)
+        embeds, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(ctx, 1, self.riddles, self.used_riddle_ids)
+        for embed in embeds:
+            await ctx.send(embed=embed)
+        #await ctx.send(embeds=embeds)
 
         # Set a timer that will go off if the team hasn't completed all the riddles
         # for the level
@@ -87,6 +104,35 @@ class RiddleCog(commands.Cog):
         self.currently_puzzling[team] = False
         return
 
+    
+    @commands.command(name='addchannel')
+    async def addchannel(self, ctx):
+        """
+        Argument to add a team's channel
+        Usage: >addchannel <channel_name> <{1, 2}>
+        """
+        # Remove command
+        print(ctx.message.content)
+        print("Received >addchannel")
+        user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}addchannel', '').strip()
+        tokens = user_args.split()
+
+        channel = discord.utils.get(ctx.guild.channels, name=tokens[0].strip())
+        print(channel.id)
+        embed = utils.create_embed()
+        if int(tokens[1]) == 1:
+            self.team1_id = channel.id
+            embed.add_field(name="Success",
+            value=f"Successfully updated Team 1's channel to {tokens[0]}")
+        elif int(tokens[1]) == 2:
+            self.team2_id = channel.id
+            embed.add_field(name="Success",
+            value=f"Successfully updated Team 2's channel to {tokens[0]}")
+        else:
+            embed.add_field(name='Incorrect Usage',
+            value='Usage: >addchannel <channel_name> <{1, 2}>')
+        await ctx.send(embed=embed)
+
 
     # Command to check the user's answer. They will be replied to telling them whether or not their answer is correct
     @commands.command(name='answer', aliases=['a'])
@@ -95,7 +141,7 @@ class RiddleCog(commands.Cog):
         Check your  answer
         Usage: >answer <your answer>
         """
-        team = utils.get_team(ctx.channel.id)
+        team = self.get_team(ctx.channel.id)
         if team < 0:
             print("answer called from an invalid channel!")
             await ctx.send("Cannot answer a riddle from this channel.")
@@ -123,21 +169,41 @@ class RiddleCog(commands.Cog):
             # Congratulate Team for solving the puzzle
             embed = utils.create_solved_embed(team, self.answer)
             self.currently_puzzling[team] = False
+            print(f"{constants.TEAM_TO_HOUSES[team]} has solved the puzzle!")
+            await ctx.send(embed=embed)
         else:
             # Create the next level embed
-            embed, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(self.current_level[team], self.riddles, self.used_riddle_ids[team])
+            embeds, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(ctx, self.current_level[team], self.riddles, self.used_riddle_ids[team])
+            for embed in embeds:
+                await ctx.send(embed=embed)
             # Start the timer again
             timer = Timer(constants.TIME_LIMIT, self.send_times_up_message, callback_args=(ctx, team, self.current_level[team]), callback_async=True)
+            #await ctx.send(embeds=embeds)
+        
+
+    @commands.command(name='reload')
+    # TODO: Uncomment this so only co-prefects can reload riddle bot
+    #@commands.has_role('Co-Prefects')
+    async def reload_sheet(self, ctx):
+        """
+        Reload the Google Sheet so we can update our riddles instantly.
+        """
+        self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
+        print(">reload used. Reloaded riddle sheet")
+        embed = utils.create_embed()
+        embed.add_field(name="Sheet Reloaded",
+        value="Google sheet successfully reloaded")
         await ctx.send(embed=embed)
+
 
     # Reload the Google sheet every hour so we can dynamically add
     # Without needing to restart the bot
-    async def reload(self, bot, sheet_key, client):
-        await bot.wait_until_ready()
+    async def reload(self):
+        await self.bot.wait_until_ready()
         while True:
             await asyncio.sleep(3600) # 1 hour
-            sheet = client.open_by_key(sheet_key).sheet1
-            self.riddles = pd.DataFrame(sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
+            #sheet = client.open_by_key(sheet_key).sheet1
+            self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
             print("Reloaded riddle sheet")
 
     # Function to clean the bot's riddle so it can start a new one.

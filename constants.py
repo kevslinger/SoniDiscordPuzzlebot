@@ -5,10 +5,8 @@ JSON_PARAMS = ["type", "project_id", "private_key_id", "private_key", "client_em
                "token_uri", "auth_provider_x509_cert_url", "client_x509_cert_url"]
 
 EMBED_COLOR = 0xd4e4ff
-TEAM_TO_HOUSES = ["Gryffindors and Ravenclaws", "Hufflepuffs and Slytherins"]
+TEAM_TO_HOUSES = ["Gryffindors and Ravenclaws", "Hufflepuffs and Slytherins", "Testers"]
 TIME_LIMIT = 60
 NUM_LEVELS = 5
-TEAM1 = int(os.getenv("TEAM1_CHANNEL_ID")) # American People
-TEAM2 = int(os.getenv("TEAM2_CHANNEL_ID")) # S only
 RIDDLE = "Riddle"
 ANSWER = "Answer"

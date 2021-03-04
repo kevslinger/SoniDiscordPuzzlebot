@@ -14,22 +14,6 @@ def create_embed() -> discord.Embed:
     return discord.Embed(color=constants.EMBED_COLOR)
 
 
-def get_team(channel_id) -> int:
-    """
-    Get team ID from current channel ID
-    Support 2 channels (one for each team), any other channel is invalid
-
-    :param channel_id: (int) the channel ID the received message was from
-    :return team: (int) the team ID
-    """
-    if channel_id == constants.TEAM1:
-            team = 0
-    elif channel_id == constants.TEAM2:
-        team = 1
-    else:
-        team = -1
-    return team
-
 #TODO: Remove this. We'll send this as part of the static puzzle, and 
 # won't need it in the bot itself.
 def get_opening_statement(ctx, team) -> discord.Embed:
@@ -44,13 +28,13 @@ def get_opening_statement(ctx, team) -> discord.Embed:
     embed.add_field(name="Welcome to my Puzzle!", value=f"Welcome, {constants.TEAM_TO_HOUSES[team]}! Congratulations on making it this far in the puzzle. " + \
     "For this part of the puzzle, you will be tasked with solving riddles in rapid succession. You will have " + \
     f"{constants.TIME_LIMIT} seconds to solve each of {constants.NUM_LEVELS} levels. Each level will get gradually harder; Level 1 will have " + \
-    "1 ridde, Level 2 will have 2 riddles, and so on. You will need to utilize teamwork and quick wit in order to " + \
+    "1 riddle, Level 2 will have 2 riddles, and so on. You will need to utilize teamwork and quick wit in order to " + \
     "defeat me! Your time will start (approximately) when you receive the first puzzle, which will happen shortly " + \
     "after you get this message. Good luck!")
     return embed
 
 
-def create_riddle_embed(level, riddles, used_riddle_ids):
+def create_riddle_embed(ctx, level, riddles, used_riddle_ids):
     """
     Function to create the riddle embed
     :param level: (int) The level of the current puzzle solvers
@@ -62,9 +46,13 @@ def create_riddle_embed(level, riddles, used_riddle_ids):
     :return riddle_answer: (list of str) the answers to the given riddles
     """
     riddle_answers = []
+    embed_list = []
     embed = create_embed()
     embed.add_field(name=f"Level {level}", value=f"Welcome to level {level}! You will have {constants.TIME_LIMIT} " + \
     f"seconds to solve {level} riddles, beginning now.", inline=False)
+    embed_list.append(embed)
+    #embed_list.append(create_embed())
+    #embed_list[0].add_field(name=f"Level {level}", value=f"Welcome to level {level}! You will have {constants.TIME_LIMIT} seconds to solve {level} riddles, beginning now.", inline=False)
     for i in range(level):
         riddle_proposal = riddles.sample()
         duplicate_counter = 0
@@ -74,12 +62,19 @@ def create_riddle_embed(level, riddles, used_riddle_ids):
             # Uh we don't want to get stuck here forever. If they've gotten this many duplicates, f it I'm down for a dup
             if duplicate_counter > 50:
                 break
-        embed.add_field(name=f"Riddle #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
+        #embed = create_embed()
+        #embed.add_field(name=f"Riddle #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
+        #embed.set_image(url=riddle_proposal[constants.RIDDLE].item())
+        #await ctx.send(embed=embed)
+        embed_list.append(create_embed())
+        embed_list[-1].add_field(name=f"Riddle #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
+        embed_list[-1].set_image(url=riddle_proposal[constants.RIDDLE].item())
         riddle_answers.append(riddle_proposal[constants.ANSWER].item())
         used_riddle_ids.append(riddle_proposal.index.item())
-    embed.add_field(name="Answering", value=f"Use {constants.BOT_PREFIX}answer to make a guess on any of the riddles.",
+    embed_list.append(create_embed())
+    embed_list[-1].add_field(name="Answering", value=f"Use {constants.BOT_PREFIX}answer to make a guess on any of the riddles.",
                     inline=False)
-    return embed, used_riddle_ids, riddle_answers
+    return embed_list, used_riddle_ids, riddle_answers
 
 
 def create_no_riddle_embed() -> discord.Embed:
@@ -108,10 +103,10 @@ def create_answer_embed(team, user_answer, current_answers) -> discord.Embed:
     """
     embed = create_embed()
     if user_answer in current_answers:
-            embed.add_field(name=f"Correct for Riddle #{current_answers.index(user_answer)+1}", value=f"{user_answer} is the correct answer!")
+            embed.add_field(name=f"Correct for Riddle #{current_answers.index(user_answer)+1}", value=f"{user_answer} is the correct answer! Only {len(current_answers)-1} riddles left for this level!")
             current_answers.pop(current_answers.index(user_answer))
     else:
-        embed.add_field(name=f"Incorrect!", value=f"{user_answer} is NOT the correct answer!")
+        embed.add_field(name=f"Incorrect!", value=f"{user_answer} is NOT one of the correct answers!")
 
     return embed
 
