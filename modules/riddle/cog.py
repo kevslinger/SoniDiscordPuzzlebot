@@ -8,25 +8,11 @@ import modules.riddle.utils as utils
 import constants
 import time
 import pandas as pd
-#from threading import Timer
 from aio_timers import Timer
 
 load_dotenv()
 
 
-# For this project, we have two teams
-# Each team will have some roles (e.g. 'Ravenclaw' and 'Gryffindor' role will be one team)
-# TODO: Can we restrict by channel not by role? (e.g. everyone in channel "Team A" will be able to use a command)
-# So we can give each team a specific command to start the puzzle and answer the puzzle
-# Only people with those roles can use those commands
-# We need a few mutexes to prevent the ability for spam.
-# We need a mutex over starting the puzzle. Once one person has started the puzzle, the process cannot be started
-# again until that round has ended. 
-# When someone starts a round, we will send them back level 1, which is 1 riddle and a 60 second timer
-# If they answer the riddle 
-
-
-# RIDDLE_ROLE_ID = int(os.getenv("RIDDLE_ROLE_ID")) #TODO: create riddle role?
 class RiddleCog(commands.Cog):
     def __init__(self, bot):
         # Bot and riddle initializations
@@ -35,25 +21,17 @@ class RiddleCog(commands.Cog):
         self.current_answers = [[], []]
         self.used_riddle_ids = [[], []]
         self.currently_puzzling = [False, False]
-        self.answer = "Jurgen Schmidhuber"
-
-
-
-        self.current_riddle = None
-        self.current_riddle_possible_answers = None
-        self.current_riddle_id = None
-        self.current_riddle_hints = None
-        self.current_given_hints = 0
+        self.answer = "Jurgen Schmidhuber" # TODO: Real answer here
 
         # Google Sheets Authentication and Initialization
         client = utils.create_gspread_client()
 
         sheet_key = os.getenv('SHEET_KEY').replace('\'', '')
         sheet = client.open_by_key(sheet_key).sheet1
-        # TODO: Use Pandas Dataframe to store riddles?
         self.riddles = pd.DataFrame(sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
         
-        #bot.loop.create_task(self.reload(bot, sheet_key, client))
+        # Reload the google sheet every hour
+        bot.loop.create_task(self.reload(bot, sheet_key, client))
             
     @commands.command(name='startpuzzle')
     async def startpuzzle(self, ctx):
@@ -79,17 +57,23 @@ class RiddleCog(commands.Cog):
         #await ctx.send(embed=opening_statement_embed)
         #time.sleep(10)
 
+        # Creates the embed containing the riddles for that level as well as updates the IDs we're using and the acceptable answers for the level
         embed, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(1, self.riddles, self.used_riddle_ids)
         await ctx.send(embed=embed)
 
-
-        #t = Timer(constants.TIME_LIMIT, self.send_times_up_message, args=[ctx, team])
+        # Set a timer that will go off if the team hasn't completed all the riddles
+        # for the level
         timer = Timer(constants.TIME_LIMIT, self.send_times_up_message, callback_args=(ctx, team, self.current_level[team]), callback_async=True)
         # TODO: do we even need any of this asyncio stuff
+        # TODO: delete, seems like it goes on its own.
         #loop = asyncio.get_event_loop()
         #loop.run_until_complete(timer.wait())
 
     async def send_times_up_message(self, ctx, team, level):
+        """
+        After X seconds, the team's time is up and if they haven't solved all the riddles,
+        They need to restart their 
+        """
         # If there are no answers left, we assume the team solved the round
         if len(self.current_answers[team]) < 1 or self.current_level[team] != level:
             print(f"{constants.TEAM_TO_HOUSES[team]}'s time is up, but they have completed the level!")
@@ -104,8 +88,7 @@ class RiddleCog(commands.Cog):
         return
 
 
-    # Command to check the user's answer. They will be replied to telling them whether or not their
-    # answer is correct. If they are incorrect, they will be asked if they want a hint or to giveup
+    # Command to check the user's answer. They will be replied to telling them whether or not their answer is correct
     @commands.command(name='answer', aliases=['a'])
     async def answer(self, ctx):
         """
@@ -154,7 +137,7 @@ class RiddleCog(commands.Cog):
         while True:
             await asyncio.sleep(3600) # 1 hour
             sheet = client.open_by_key(sheet_key).sheet1
-            self.riddles = sheet.get_all_values()[1:]
+            self.riddles = pd.DataFrame(sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
             print("Reloaded riddle sheet")
 
     # Function to clean the bot's riddle so it can start a new one.
