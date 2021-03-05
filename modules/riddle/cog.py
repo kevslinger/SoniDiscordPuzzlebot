@@ -53,7 +53,7 @@ class RiddleCog(commands.Cog):
     async def startpuzzle(self, ctx):
         """
         Start your puzzle! You will have 60 seconds per level to solve the riddles
-        Usage: >startpuzzle
+        Usage: ~startpuzzle
         """
         team = self.get_team(ctx.channel.id)
         if team < 0:
@@ -100,7 +100,7 @@ class RiddleCog(commands.Cog):
         print(f"{constants.TEAM_TO_HOUSES[team]}'s time is up, unlucky.")
         # Create an embed to send to the team. 
         embed = discord.Embed(color=constants.EMBED_COLOR)
-        embed.add_field(name="Time's up!", value=f"Sorry, {constants.TEAM_TO_HOUSES[team]}! Your time is up. You still had {len(self.current_answers[team])} riddles left to solve for level {level}. If you'd like to re-attempt the puzzle, use the >startpuzzle command!")
+        embed.add_field(name="Time's up!", value=f"Sorry, {constants.TEAM_TO_HOUSES[team]}! Your time is up. You still had {len(self.current_answers[team])} riddles left to solve for level {level}. If you'd like to re-attempt the puzzle, use the ~startpuzzle command!")
         await ctx.send(embed=embed)
         self.currently_puzzling[team] = False
         return
@@ -111,11 +111,11 @@ class RiddleCog(commands.Cog):
     async def addchannel(self, ctx):
         """
         Argument to add a team's channel
-        Usage: >addchannel <channel_name> <{1, 2}>
+        Usage: ~addchannel <channel_name> <{1, 2}>
         """
         # Remove command
         print(ctx.message.content)
-        print("Received >addchannel")
+        print("Received ~addchannel")
         user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}addchannel', '').strip()
         tokens = user_args.split()
 
@@ -130,7 +130,7 @@ class RiddleCog(commands.Cog):
             self.team3_id = channel.id
         else:
             embed.add_field(name='Incorrect Usage',
-            value='Usage: >addchannel <channel_name> <{1, 2}>')
+            value='Usage: ~addchannel <channel_name> <{1, 2}>')
             await ctx.send(embed=embed)
             return
 
@@ -144,7 +144,7 @@ class RiddleCog(commands.Cog):
     async def answer(self, ctx):
         """
         Check your  answer
-        Usage: >answer <your answer>
+        Usage: ~answer <your answer>
         """
         team = self.get_team(ctx.channel.id)
         if team < 0:
@@ -194,7 +194,7 @@ class RiddleCog(commands.Cog):
         Reload the Google Sheet so we can update our riddles instantly.
         """
         self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
-        print(">reload used. Reloaded riddle sheet")
+        print(f"{constants.BOT_PREFIX}reload used. Reloaded riddle sheet")
         embed = utils.create_embed()
         embed.add_field(name="Sheet Reloaded",
         value="Google sheet successfully reloaded")

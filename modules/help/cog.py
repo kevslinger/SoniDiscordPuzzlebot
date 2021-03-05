@@ -10,8 +10,8 @@ class HelpCog(commands.Cog):
     @commands.command(name='help')
     async def help(self, ctx):
         embed = discord.Embed(color=constants.EMBED_COLOR)
-        embed.add_field(name="startpuzzle", value="Starts the puzzle!\n Usage: >startpuzzle", inline=False)
-        embed.add_field(name="answer", value="Answer any of the current riddles. \nUsage: >answer <your_answer>", inline=False)
+        embed.add_field(name="startpuzzle", value=f"Starts the puzzle!\n Usage: {constants.BOT_PREFIX}startpuzzle", inline=False)
+        embed.add_field(name="answer", value=f"Answer any of the current riddles. \nUsage: {constants.BOT_PREFIX}answer <your_answer>", inline=False)
         await ctx.send(embed=embed)
         
 
