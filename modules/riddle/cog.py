@@ -17,10 +17,10 @@ class RiddleCog(commands.Cog):
     def __init__(self, bot):
         # Bot and riddle initializations
         self.bot = bot
-        self.current_level = [1, 1]
-        self.current_answers = [[], []]
-        self.used_riddle_ids = [[], []]
-        self.currently_puzzling = [False, False]
+        self.current_level = [1, 1, 1]
+        self.current_answers = [[], [], []]
+        self.used_riddle_ids = [[], [], []]
+        self.currently_puzzling = [False, False, False]
         self.answer = "Jurgen Schmidhuber" # TODO: Real answer here
         self.team1_id = int(os.getenv("TEAM1_CHANNEL_ID"))
         self.team2_id = int(os.getenv("TEAM2_CHANNEL_ID"))
@@ -45,6 +45,7 @@ class RiddleCog(commands.Cog):
         elif channel_id == self.team3_id:
             team = 2
         else:
+            print(f"invalid team. channel id is {channel_id} and team3_id is {self.team3_id}")
             team = -1
         return team
             
@@ -106,6 +107,7 @@ class RiddleCog(commands.Cog):
 
     
     @commands.command(name='addchannel')
+    @commands.has_role("Co-Prefects")
     async def addchannel(self, ctx):
         """
         Argument to add a team's channel
@@ -122,15 +124,18 @@ class RiddleCog(commands.Cog):
         embed = utils.create_embed()
         if int(tokens[1]) == 1:
             self.team1_id = channel.id
-            embed.add_field(name="Success",
-            value=f"Successfully updated Team 1's channel to {tokens[0]}")
         elif int(tokens[1]) == 2:
             self.team2_id = channel.id
-            embed.add_field(name="Success",
-            value=f"Successfully updated Team 2's channel to {tokens[0]}")
+        elif int(tokens[1]) == 3:
+            self.team3_id = channel.id
         else:
             embed.add_field(name='Incorrect Usage',
             value='Usage: >addchannel <channel_name> <{1, 2}>')
+            await ctx.send(embed=embed)
+            return
+
+        embed.add_field(name="Success",
+            value=f"Successfully updated Team {int(tokens[1])}'s channel to {tokens[0]}")
         await ctx.send(embed=embed)
 
 
@@ -183,7 +188,7 @@ class RiddleCog(commands.Cog):
 
     @commands.command(name='reload')
     # TODO: Uncomment this so only co-prefects can reload riddle bot
-    #@commands.has_role('Co-Prefects')
+    @commands.has_role('Co-Prefects')
     async def reload_sheet(self, ctx):
         """
         Reload the Google Sheet so we can update our riddles instantly.
