@@ -14,13 +14,17 @@ def create_embed() -> discord.Embed:
     return discord.Embed(color=constants.EMBED_COLOR)
 
 
+def create_level_prep_embed(level, team_name) -> discord.Embed:
+    embed = create_embed()
+    embed.add_field(name=f"Level {level} Complete!", value=f"Well done, {team_name}! Level {level+1} will begin in 30 seconds.")
+    return embed
+
 #TODO: Remove this. We'll send this as part of the static puzzle, and 
 # won't need it in the bot itself.
-def get_opening_statement(ctx, team) -> discord.Embed:
+def get_opening_statement(team) -> discord.Embed:
     """
     Assemble the opening message to send to the team before their puzzle begins
     
-    :param ctx: (discord.ext.commands.Context) the context the command was invoked under
     :param team: (int) the team ID of the invoked command
     :return embed: (discord.Embed) the embed that includes the welcome message
     """
@@ -34,7 +38,7 @@ def get_opening_statement(ctx, team) -> discord.Embed:
     return embed
 
 
-def create_riddle_embed(ctx, level, riddles, used_riddle_ids):
+def create_riddle_embed(level, riddles, used_riddle_ids):
     """
     Function to create the riddle embed
     :param level: (int) The level of the current puzzle solvers
@@ -49,10 +53,8 @@ def create_riddle_embed(ctx, level, riddles, used_riddle_ids):
     embed_list = []
     embed = create_embed()
     embed.add_field(name=f"Level {level}", value=f"Welcome to level {level}! You will have {constants.TIME_LIMIT} " + \
-    f"seconds to solve {level} riddles, beginning now.", inline=False)
+    f"seconds to solve {level} ciphers, beginning now.", inline=False)
     embed_list.append(embed)
-    #embed_list.append(create_embed())
-    #embed_list[0].add_field(name=f"Level {level}", value=f"Welcome to level {level}! You will have {constants.TIME_LIMIT} seconds to solve {level} riddles, beginning now.", inline=False)
     for i in range(level):
         riddle_proposal = riddles.sample()
         duplicate_counter = 0
@@ -62,17 +64,13 @@ def create_riddle_embed(ctx, level, riddles, used_riddle_ids):
             # Uh we don't want to get stuck here forever. If they've gotten this many duplicates, f it I'm down for a dup
             if duplicate_counter > 50:
                 break
-        #embed = create_embed()
-        #embed.add_field(name=f"Riddle #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
-        #embed.set_image(url=riddle_proposal[constants.RIDDLE].item())
-        #await ctx.send(embed=embed)
         embed_list.append(create_embed())
-        embed_list[-1].add_field(name=f"Riddle #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
+        embed_list[-1].add_field(name=f"Cipher #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
         embed_list[-1].set_image(url=riddle_proposal[constants.RIDDLE].item())
-        riddle_answers.append(riddle_proposal[constants.ANSWER].item())
+        riddle_answers.append(riddle_proposal[constants.ANSWER].item().replace(' ', ''))
         used_riddle_ids.append(riddle_proposal.index.item())
     embed_list.append(create_embed())
-    embed_list[-1].add_field(name="Answering", value=f"Use {constants.BOT_PREFIX}answer to make a guess on any of the riddles.",
+    embed_list[-1].add_field(name="Answering", value=f"Use {constants.BOT_PREFIX}answer to make a guess on any of the ciphers.",
                     inline=False)
     return embed_list, used_riddle_ids, riddle_answers
 
@@ -101,17 +99,19 @@ def create_answer_embed(team, user_answer, current_answers) -> discord.Embed:
 
     :return embed: (discord.Embed) the embed telling the user whether they answered correctly or not.
     """
-    embed = create_embed()
+    #embed = create_embed()
     if user_answer in current_answers:
-            embed.add_field(name=f"Correct for Riddle #{current_answers.index(user_answer)+1}", value=f"{user_answer} is the correct answer! Only {len(current_answers)-1} riddles left for this level!")
+            #embed.add_field(name=f"Correct for Riddle #{current_answers.index(user_answer)+1}", value=f"{user_answer} is the correct answer! Only {len(current_answers)-1} riddles left for this level!")
             current_answers.pop(current_answers.index(user_answer))
+            result = constants.CORRECT
     else:
-        embed.add_field(name=f"Incorrect!", value=f"{user_answer} is NOT one of the correct answers!")
+        #embed.add_field(name=f"Incorrect!", value=f"{user_answer} is NOT one of the correct answers!")
+        result = constants.INCORRECT
 
-    return embed
+    return result #embed, result
 
 
-def create_solved_embed(team, answer) -> discord.Embed:
+def create_solved_embed(team, team_name, answer) -> discord.Embed:
     """
     Create embed which has the answer to the puzzle.
 
@@ -121,7 +121,7 @@ def create_solved_embed(team, answer) -> discord.Embed:
     :return embed: (discord.Embed) the embed containing the puzzle answer
     """
     embed = create_embed()
-    embed.add_field(name="Congratulations!", value=f"Congrats, {constants.TEAM_TO_HOUSES[team]} on a job well done! You successfully solved all {constants.NUM_LEVELS} levels. Here is the answer to the puzzle", inline=False)
+    embed.add_field(name="Congratulations!", value=f"Congrats, {team_name} on a job well done! You successfully solved all {constants.NUM_LEVELS} levels. Here is the answer to the puzzle", inline=False)
     embed.add_field(name="Puzzle Answer", value=answer)
     return embed
 
