@@ -7,7 +7,7 @@ class HelpCog(commands.Cog):
     def __init__(self, bot):
         pass
     
-    @commands.command(name='cursebreaker', aliases=['CURSEBREAKER'])
+    @commands.command(name='codebreaker')
     async def real_help(self, ctx):
         embed = discord.Embed(color=constants.EMBED_COLOR)
         embed.add_field(name="startpuzzle", value=f"Starts the puzzle!\n Usage: {constants.BOT_PREFIX}startpuzzle", inline=False)
@@ -30,6 +30,8 @@ class HelpCog(commands.Cog):
         embed.add_field(name="getname", value=f"Get the name of a team.\nUsage: {constants.BOT_PREFIX}getname <(1,2,3)>", inline=False)
         embed.add_field(name="addchannel", value=f"Bind a channel to a team.\nUsage: {constants.BOT_PREFIX}addchannel <channel_name> <(1,2,3)>", inline=False)
         embed.add_field(name="reload", value=f"Reload the google sheet to update riddle values.\nUsage: {constants.BOT_PREFIX}reload\nNote: this is performed hourly without the command.", inline=False)
+        embed.add_field(name="codebreaker", value=f"Gives the help the solvers will see, which gives them info on startpuzzle and answer only.\nUsage: {constants.BOT_PREFIX}codebreaker")
+        embed.add_field(name="help", value=f"A fun and useful help command XD\nUsage: {constants.BOT_PREFIX}help")
         await ctx.send(embed=embed)
         
 

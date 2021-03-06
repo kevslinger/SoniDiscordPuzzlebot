@@ -60,8 +60,8 @@ class RiddleCog(commands.Cog):
         """
         team = self.get_team(ctx.channel.id)
         if team < 0:
-            print("Startpuzzle called from an invalid channel!")
-            await ctx.send("Cannot start a puzzle from this channel.")
+            print("startpuzzle called from an invalid channel!")
+            await ctx.send("Cannot break curses from this channel.")
             return
         # Housekeeping
         print(f"Received startpuzzle from team {self.team_names[team]}")
@@ -79,17 +79,17 @@ class RiddleCog(commands.Cog):
         # Creates the embed containing the riddles for that level as well as updates the IDs we're using and the acceptable answers for the level
         embeds, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(1, self.riddles, self.used_riddle_ids)
         self.current_answers[team] = [answer.replace(' ', '') for answer in self.current_answers[team]]
-        for embed in embeds:
-            await ctx.send(embed=embed)
+        #for embed in embeds:
+        #    await ctx.send(embed=embed)
         #await ctx.send(embeds=embeds)
 
+
+        await ctx.send(embed=utils.get_opening_statement(team))
+        time = Timer(constants.BREAK_TIME, self.start_new_level, callback_args=(ctx, team, embeds), callback_async=True)
         # Set a timer that will go off if the team hasn't completed all the riddles
         # for the level
-        timer = Timer(constants.TIME_LIMIT, self.send_times_up_message, callback_args=(ctx, team, self.current_level[team]), callback_async=True)
-        # TODO: do we even need any of this asyncio stuff
-        # TODO: delete, seems like it goes on its own.
-        #loop = asyncio.get_event_loop()
-        #loop.run_until_complete(timer.wait())
+        #timer = Timer(constants.TIME_LIMIT, self.send_times_up_message, callback_args=(ctx, team, self.current_level[team]), callback_async=True)
+
 
     async def send_times_up_message(self, ctx, team, level):
         """
@@ -161,11 +161,14 @@ class RiddleCog(commands.Cog):
         """
         # Remove command
         print("Received ~addchannel")
-        user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}addchannel', '').strip()
+        user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}addchannel', '').strip().replace('#', '')
+        print(user_args)
         tokens = user_args.split()
 
-        channel = discord.utils.get(ctx.guild.channels, name=tokens[0].strip())
-        print(channel.id)
+        #channel = discord.utils.get(ctx.guild.channels, name=tokens[0].strip())
+        #print(channel.id)
+        channel = discord.utils.get(ctx.guild.channels, id=int(tokens[0].replace('>', '').replace('<', '')))
+
         embed = utils.create_embed()
         if 1 <= int(tokens[1]) <= 3:
             self.team_channel_ids[int(tokens[1])-1] = channel.id
@@ -176,7 +179,7 @@ class RiddleCog(commands.Cog):
             return
 
         embed.add_field(name="Success",
-            value=f"Successfully updated Team {int(tokens[1])}'s channel to {tokens[0]}")
+            value=f"Successfully updated Team {int(tokens[1])}'s channel to {channel}")
         await ctx.send(embed=embed)
 
 

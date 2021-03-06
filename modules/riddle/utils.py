@@ -30,10 +30,10 @@ def get_opening_statement(team) -> discord.Embed:
     """
     embed = create_embed()
     embed.add_field(name="Welcome to my Puzzle!", value=f"Welcome, {constants.TEAM_TO_HOUSES[team]}! Congratulations on making it this far in the puzzle. " + \
-    "For this part of the puzzle, you will be tasked with solving riddles in rapid succession. You will have " + \
-    f"{constants.TIME_LIMIT} seconds to solve each of {constants.NUM_LEVELS} levels. Each level will get gradually harder; Level 1 will have " + \
-    "1 riddle, Level 2 will have 2 riddles, and so on. You will need to utilize teamwork and quick wit in order to " + \
-    "defeat me! Your time will start (approximately) when you receive the first puzzle, which will happen shortly " + \
+    "For this part, you will be tasked with solving ciphers in rapid succession. You will have " + \
+    f"{constants.TIME_LIMIT} seconds to solve each of {constants.NUM_LEVELS} levels. Each level will increase in difficulty; Level 1 will have " + \
+    "1 riddle, Level 2 will have 2 riddles... you get the idea. You will need to utilize teamwork and quick wit in order to " + \
+    "defeat me! Your time will start when you receive the first puzzle, which will happen in about 30 seconds " + \
     "after you get this message. Good luck!")
     return embed
 
