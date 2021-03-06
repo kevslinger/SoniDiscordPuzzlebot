@@ -184,6 +184,12 @@ class RiddleCog(commands.Cog):
         print(user_args)
         tokens = user_args.split()
 
+        if tokens[0] == '0':
+            self.team_channel_ids[int(tokens[1])-1] = None
+            embed = utils.create_embed()
+            embed.add_field(name="Success", value=f"Successfully removed channel from team {int(tokens[1])}")
+            await ctx.send(embed=embed)
+            return
         #channel = discord.utils.get(ctx.guild.channels, name=tokens[0].strip())
         #print(channel.id)
         #channel = discord.utils.get(ctx.guild.channels, id=int(tokens[0].replace('>', '').replace('<', '')))
@@ -306,8 +312,25 @@ class RiddleCog(commands.Cog):
     def reset_riddle(self, team):
         self.current_level[team] = 1
         self.current_answers[team] = []
-        self.used_riddle_ids[team] = []
+        #self.used_riddle_ids[team] = [] UPDATE: Don't reset used riddle IDs. We have enough. Only do that on a forced ~reset
         self.currently_puzzling[team] = False
+
+    @commands.command(name='reset')
+    @commands.has_role("bot-whisperer")
+    async def reset(self, ctx):
+        """
+        Reset the bot as if it has just loaded up
+        Usage: ~reset
+        Note: Does not reload google sheet. Use ~reload for that
+        """
+        for team in range(len(self.team_names)):
+            self.current_level[team] = 1
+            self.current_answers[team] = []
+            self.used_riddle_ids[team] = []
+            self.currently_puzzling[team] = False
+        embed = utils.create_embed()
+        embed.add_field(name="Success", value="Bot has been reset. I feel brand new!")
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

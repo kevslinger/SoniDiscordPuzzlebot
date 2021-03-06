@@ -34,6 +34,7 @@ class HelpCog(commands.Cog):
         embed.add_field(name="getchannels", value=f"Get the name and bound channels for all teams.\nUsage: {constants.BOT_PREFIX}getchannels", inline=False)
         embed.add_field(name="addchannel", value=f"Bind a channel to a team.\nUsage: {constants.BOT_PREFIX}addchannel <channel_name> <(1,2,3)>", inline=False)
         embed.add_field(name="reload", value=f"Reload the google sheet to update riddle values.\nUsage: {constants.BOT_PREFIX}reload\nNote: this is performed hourly without the command.", inline=False)
+        embed.add_field(name="reset", value=f"Reset the bot as if it has just loaded up\nUsage: {constants.BOT_PREFIX}reset\nNote: Does not reload google sheet. Use {constants.BOT_PREFIX}reload for that", inline=False)
         embed.add_field(name="codebreaker", value=f"Gives the help the solvers will see, which gives them info on startpuzzle and answer only.\nUsage: {constants.BOT_PREFIX}codebreaker", inline=False)
         embed.add_field(name="help", value=f"A fun and useful help command XD\nUsage: {constants.BOT_PREFIX}help", inline=False)
         await ctx.send(embed=embed)
