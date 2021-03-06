@@ -23,8 +23,9 @@ class RiddleCog(commands.Cog):
         self.used_riddle_ids = [[], [], []]
         self.currently_puzzling = [False, False, False]
         self.answer = "SULPHUR VIVE" # TODO: Real answer here
-        self.team_names = ["Team 1", "Team, 2", "Testers"]
-        self.team_channel_ids = [0, 0, 0]
+        self.team_names = ["Team 1", "Team 2", "Testers"]
+        # Set defaults to Arithmancy Team 1, Arithmancy Team 2, and Soni's kev-testing-2
+        self.team_channel_ids = [817232131373662268, 817232183982948362, 817032422796558407]
         #self.team1_id = int(os.getenv("TEAM1_CHANNEL_ID"))
         #self.team2_id = int(os.getenv("TEAM2_CHANNEL_ID"))
         #self.team3_id = 0
@@ -34,7 +35,7 @@ class RiddleCog(commands.Cog):
 
         self.sheet_key = os.getenv('SHEET_KEY').replace('\'', '')
         self.sheet = self.client.open_by_key(self.sheet_key).sheet1
-        self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
+        self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
         
         # Reload the google sheet every hour
         #bot.loop.create_task(self.reload(bot, self.sheet_key, self.client))
@@ -52,19 +53,21 @@ class RiddleCog(commands.Cog):
             team = -1
         return team
             
-    @commands.command(name='startpuzzle')
+    @commands.command(name='startrace')
     async def startpuzzle(self, ctx):
         """
-        Start your puzzle! You will have 60 seconds per level to solve the riddles
-        Usage: ~startpuzzle
+        Start your race! You will have 60 seconds per level to solve the riddles
+        Usage: ~startrace
         """
         team = self.get_team(ctx.channel.id)
         if team < 0:
-            print("startpuzzle called from an invalid channel!")
-            await ctx.send("Cannot break curses from this channel.")
+            print("startrace called from an invalid channel!")
+            embed = utils.create_embed()
+            embed.add_field(name="Can't do that!", value="Cannot solve that puzzle from this channel.")
+            await ctx.send(embed=embed)
             return
         # Housekeeping
-        print(f"Received startpuzzle from team {self.team_names[team]}")
+        print(f"Received startrace from team {self.team_names[team]}")
         if self.currently_puzzling[team]:
             return
         else:
@@ -84,7 +87,7 @@ class RiddleCog(commands.Cog):
         #await ctx.send(embeds=embeds)
 
 
-        await ctx.send(embed=utils.get_opening_statement(team))
+        await ctx.send(embed=utils.get_opening_statement(self.team_names[team]))
         time = Timer(constants.BREAK_TIME, self.start_new_level, callback_args=(ctx, team, embeds), callback_async=True)
         # Set a timer that will go off if the team hasn't completed all the riddles
         # for the level
@@ -104,7 +107,8 @@ class RiddleCog(commands.Cog):
         print(f"{self.team_names[team]}'s time is up, unlucky.")
         # Create an embed to send to the team. 
         embed = discord.Embed(color=constants.EMBED_COLOR)
-        embed.add_field(name="Time's up!", value=f"Sorry, {self.team_names[team]}! Your time is up. You still had {len(self.current_answers[team])} riddles left to solve for level {level}. If you'd like to re-attempt the puzzle, use the ~startpuzzle command!")
+        embed.add_field(name="Time's up!", value=f"Sorry, {self.team_names[team]}! Your time is up. You still had {len(self.current_answers[team])} riddles left to solve for level {level}. If you'd like to re-attempt the puzzle, use the ~startpuzzle command!", inline=False)
+        embed.add_field(name="Answers", value=f"The remaining answers were\n{chr(10).join(self.current_answers[team])}", inline=False)
         await ctx.send(embed=embed)
         self.currently_puzzling[team] = False
         return
@@ -117,7 +121,7 @@ class RiddleCog(commands.Cog):
         Usage: ~nameteam <{1, 2, 3}> <new_name>
         """
         # Remove command
-        print("Received ~addchannel")
+        print("Received ~namedteam")
         user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}nameteam', '').strip()
         tokens = user_args.split()
         embed = utils.create_embed()
@@ -149,6 +153,21 @@ class RiddleCog(commands.Cog):
             embed.add_field(name='Incorrect Usage',
             value='Usage: ~getname <{1, 2, 3}>')
         await ctx.send(embed=embed)
+
+
+    @commands.command(name="getchannels")
+    @commands.has_role("bot-whisperer")
+    async def getchannels(self, ctx):
+        """
+        Get all channels and team names
+        Usage: ~getchannels
+        """
+        print("Received ~getchannels")
+        embed = utils.create_embed()
+        for team in range(len(self.team_channel_ids)):
+            embed.add_field(name=f"Team {team+1} Name", value=f"{self.team_names[team]}", inline=False)
+            embed.add_field(name=f"Team {team+1} Channel", value=f"{self.bot.get_channel(self.team_channel_ids[team])}", inline=False)
+        await ctx.send(embed=embed)
     
 
 
@@ -167,7 +186,8 @@ class RiddleCog(commands.Cog):
 
         #channel = discord.utils.get(ctx.guild.channels, name=tokens[0].strip())
         #print(channel.id)
-        channel = discord.utils.get(ctx.guild.channels, id=int(tokens[0].replace('>', '').replace('<', '')))
+        #channel = discord.utils.get(ctx.guild.channels, id=int(tokens[0].replace('>', '').replace('<', '')))
+        channel = self.bot.get_channel(int(tokens[0].replace('<', '').replace('>', '')))
 
         embed = utils.create_embed()
         if 1 <= int(tokens[1]) <= 3:
@@ -193,7 +213,9 @@ class RiddleCog(commands.Cog):
         team = self.get_team(ctx.channel.id)
         if team < 0:
             print("answer called from an invalid channel!")
-            await ctx.send("Cannot answer a riddle from this channel.")
+            embed = utils.create_embed()
+            embed.add_field(name="Can't do that!", value="Cannot solve that puzzle from this channel.")
+            await ctx.send(embed=embed)
             return
         # log command in console
         print(f"Received answer from {self.team_names[team]}")
@@ -260,7 +282,8 @@ class RiddleCog(commands.Cog):
         """
         Reload the Google Sheet so we can update our riddles instantly.
         """
-        self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
+        self.sheet = self.client.open_by_key(self.sheet_key).sheet1
+        self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
         print(f"{constants.BOT_PREFIX}reload used. Reloaded riddle sheet")
         embed = utils.create_embed()
         embed.add_field(name="Sheet Reloaded",
@@ -275,7 +298,8 @@ class RiddleCog(commands.Cog):
         while True:
             await asyncio.sleep(3600) # 1 hour
             #sheet = client.open_by_key(sheet_key).sheet1
-            self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=[constants.RIDDLE, constants.ANSWER])
+            self.sheet = self.client.open_by_key(self.sheet_key).sheet1
+            self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
             print("Reloaded riddle sheet")
 
     # Function to clean the bot's riddle so it can start a new one.

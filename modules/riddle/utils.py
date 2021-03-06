@@ -21,7 +21,7 @@ def create_level_prep_embed(level, team_name) -> discord.Embed:
 
 #TODO: Remove this. We'll send this as part of the static puzzle, and 
 # won't need it in the bot itself.
-def get_opening_statement(team) -> discord.Embed:
+def get_opening_statement(teamname) -> discord.Embed:
     """
     Assemble the opening message to send to the team before their puzzle begins
     
@@ -29,12 +29,13 @@ def get_opening_statement(team) -> discord.Embed:
     :return embed: (discord.Embed) the embed that includes the welcome message
     """
     embed = create_embed()
-    embed.add_field(name="Welcome to my Puzzle!", value=f"Welcome, {constants.TEAM_TO_HOUSES[team]}! Congratulations on making it this far in the puzzle. " + \
-    "For this part, you will be tasked with solving ciphers in rapid succession. You will have " + \
-    f"{constants.TIME_LIMIT} seconds to solve each of {constants.NUM_LEVELS} levels. Each level will increase in difficulty; Level 1 will have " + \
-    "1 riddle, Level 2 will have 2 riddles... you get the idea. You will need to utilize teamwork and quick wit in order to " + \
-    "defeat me! Your time will start when you receive the first puzzle, which will happen in about 30 seconds " + \
-    "after you get this message. Good luck!")
+    embed.add_field(name=f"Welcome, {teamname}", value="You have started a new race! Level 1 will start in about 30 seconds from this message! Good luck and have fun!")
+    #embed.add_field(name="Welcome to my Puzzle!", value=f"Welcome, {teamname}! Congratulations on making it this far in the puzzle. " + \
+    #"For this part, you will be tasked with solving ciphers in rapid succession. You will have " + \
+    #f"{constants.TIME_LIMIT} seconds to solve each of {constants.NUM_LEVELS} levels. Each level will increase in difficulty; Level 1 will have " + \
+    #"1 riddle, Level 2 will have 2 riddles... you get the idea. You will need to utilize teamwork and quick wit in order to " + \
+    #"defeat me! Your time will start when you receive the first puzzle, which will happen in about 30 seconds " + \
+    #"after you get this message. Good luck!")
     return embed
 
 
@@ -58,7 +59,7 @@ def create_riddle_embed(level, riddles, used_riddle_ids):
     for i in range(level):
         riddle_proposal = riddles.sample()
         duplicate_counter = 0
-        while riddle_proposal.index.item() in used_riddle_ids:
+        while riddle_proposal[constants.ID].item() in used_riddle_ids:
             riddle_proposal = riddles.sample()
             duplicate_counter += 1
             # Uh we don't want to get stuck here forever. If they've gotten this many duplicates, f it I'm down for a dup
@@ -83,7 +84,7 @@ def create_no_riddle_embed() -> discord.Embed:
     """
     embed = create_embed()
     embed.add_field(name="No Current Riddle", 
-                    value=f"You haven't started the puzzle. To start, use command {constants.BOT_PREFIX}startpuzzle.",
+                    value=f"You haven't started the puzzle. To start, use command {constants.BOT_PREFIX}startrace.",
                     inline=False)
     return embed
 
@@ -100,6 +101,7 @@ def create_answer_embed(team, user_answer, current_answers) -> discord.Embed:
     :return embed: (discord.Embed) the embed telling the user whether they answered correctly or not.
     """
     #embed = create_embed()
+    user_answer = user_answer.upper()
     if user_answer in current_answers:
             #embed.add_field(name=f"Correct for Riddle #{current_answers.index(user_answer)+1}", value=f"{user_answer} is the correct answer! Only {len(current_answers)-1} riddles left for this level!")
             current_answers.pop(current_answers.index(user_answer))

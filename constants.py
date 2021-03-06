@@ -5,12 +5,13 @@ JSON_PARAMS = ["type", "project_id", "private_key_id", "private_key", "client_em
                "token_uri", "auth_provider_x509_cert_url", "client_x509_cert_url"]
 
 EMBED_COLOR = 0xd4e4ff
-TEAM_TO_HOUSES = ["Gryffindors and Ravenclaws", "Hufflepuffs and Slytherins", "Testers"]
 TIME_LIMIT = 60
 BREAK_TIME = 30
 NUM_LEVELS = 5
+ID = "ID"
 RIDDLE = "Riddle"
 ANSWER = "Answer"
+COLUMNS = [ID, RIDDLE, ANSWER]
 CORRECT = "Correct"
 INCORRECT = "Incorrect"
 CORRECT_EMOJI = ':white_check_mark:'
