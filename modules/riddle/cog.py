@@ -107,7 +107,7 @@ class RiddleCog(commands.Cog):
         print(f"{self.team_names[team]}'s time is up, unlucky.")
         # Create an embed to send to the team. 
         embed = discord.Embed(color=constants.EMBED_COLOR)
-        embed.add_field(name="Time's up!", value=f"Sorry, {self.team_names[team]}! Your time is up. You still had {len(self.current_answers[team])} riddles left to solve for level {level}. If you'd like to re-attempt the puzzle, use the ~startpuzzle command!", inline=False)
+        embed.add_field(name="Time's up!", value=f"Sorry, {self.team_names[team]}! Your time is up. You still had {len(self.current_answers[team])} riddles left to solve for level {level}. If you'd like to re-attempt the puzzle, use the ~startrace command!", inline=False)
         embed.add_field(name="Answers", value=f"The remaining answers were\n{chr(10).join(self.current_answers[team])}", inline=False)
         await ctx.send(embed=embed)
         self.currently_puzzling[team] = False
