@@ -24,11 +24,8 @@ class RiddleCog(commands.Cog):
         self.currently_puzzling = [False, False, False]
         self.answer = "SULPHUR VIVE" # TODO: Real answer here
         self.team_names = ["Team 1", "Team 2", "Testers"]
-        # Set defaults to Arithmancy Team 1, Arithmancy Team 2, and Soni's kev-testing-2
-        self.team_channel_ids = [817232131373662268, 817232183982948362, 817032422796558407]
-        #self.team1_id = int(os.getenv("TEAM1_CHANNEL_ID"))
-        #self.team2_id = int(os.getenv("TEAM2_CHANNEL_ID"))
-        #self.team3_id = 0
+        # Set defaults to Arithmancy Team 1, Arithmancy Team 2, and Arithmancy prefect-team-1-bot
+        self.team_channel_ids = [817232131373662268, 817232183982948362, 817817797043159100]
 
         # Google Sheets Authentication and Initialization
         self.client = utils.create_gspread_client()
@@ -38,15 +35,18 @@ class RiddleCog(commands.Cog):
         self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
         
         # Reload the google sheet every hour
-        #bot.loop.create_task(self.reload(bot, self.sheet_key, self.client))
         bot.loop.create_task(self.reload())
 
     def get_team(self, channel_id):
-        if channel_id == self.team_channel_ids[0]:#self.team1_id:
+        # TODO: would 
+        # if channel_id in self.team_channel_ids:
+        #   return self.team_channel_ids.index(channel_id)
+        # work?
+        if channel_id == self.team_channel_ids[0]:
             team = 0
-        elif channel_id == self.team_channel_ids[1]:#self.team2_id:
+        elif channel_id == self.team_channel_ids[1]:
             team = 1
-        elif channel_id == self.team_channel_ids[2]:#self.team3_id:
+        elif channel_id == self.team_channel_ids[2]:
             team = 2
         else:
             print(f"invalid team")
@@ -73,26 +73,14 @@ class RiddleCog(commands.Cog):
         else:
             self.reset_riddle(team)
             self.currently_puzzling[team] = True
-        # TODO: DELETE THIS (welcome statement will be part of the static puzzle, not the bot)
-        # Get opening introductory Statement
-        #opening_statement_embed = utils.get_opening_statement(ctx, team)
-        #await ctx.send(embed=opening_statement_embed)
-        #time.sleep(10)
 
-        # Creates the embed containing the riddles for that level as well as updates the IDs we're using and the acceptable answers for the level
+        # Creates the embeds containing the ciphers for that level as well as updates the IDs we're using and the acceptable answers for the level
         embeds, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(1, self.riddles, self.used_riddle_ids)
         self.current_answers[team] = [answer.replace(' ', '') for answer in self.current_answers[team]]
-        #for embed in embeds:
-        #    await ctx.send(embed=embed)
-        #await ctx.send(embeds=embeds)
-
 
         await ctx.send(embed=utils.get_opening_statement(self.team_names[team]))
+        # In a short time, send the ciphers
         time = Timer(constants.BREAK_TIME, self.start_new_level, callback_args=(ctx, team, embeds), callback_async=True)
-        # Set a timer that will go off if the team hasn't completed all the riddles
-        # for the level
-        #timer = Timer(constants.TIME_LIMIT, self.send_times_up_message, callback_args=(ctx, team, self.current_level[team]), callback_async=True)
-
 
     async def send_times_up_message(self, ctx, team, level):
         """
@@ -114,36 +102,37 @@ class RiddleCog(commands.Cog):
         return
 
     @commands.command(name='nameteam')
-    @commands.has_role("bot-whisperer")
+    @commands.has_role(constants.BOT_WHISPERER)
     async def nameteam(self, ctx):
         """
         Change the name of a team
         Usage: ~nameteam <{1, 2, 3}> <new_name>
         """
-        # Remove command
         print("Received ~namedteam")
+        # Remove command from the input message.
         user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}nameteam', '').strip()
         tokens = user_args.split()
+
         embed = utils.create_embed()
         if 1 <= int(tokens[0]) <= 3:
             self.team_names[int(tokens[0])-1] = " ".join(tokens[1:])
+            embed.add_field(name="Success",
+            value=f"Successfully updated Team {int(tokens[0])}'s name to to {' '.join(tokens[1:])}")
         else:
             embed.add_field(name='Incorrect Usage',
             value='Usage: ~nameteam <{1, 2, 3}> <new_name>')
-            await ctx.send(embed=embed)
-            return
-        embed.add_field(name="Success",
-            value=f"Successfully updated Team {int(tokens[0])}'s name to to {' '.join(tokens[1:])}")
         await ctx.send(embed=embed)
 
+    # TODO: Deprecated. Use getchannels instead
     @commands.command(name="getname")
-    @commands.has_role("bot-whisperer")
+    @commands.has_role(constants.BOT_WHISPERER)
     async def getname(self, ctx):
         """
         Get a team name
         Usage: ~getname <{1, 2, 3}>
         """
         print("Received ~getname")
+        # Remove command from message input
         teamnum = ctx.message.content.replace(f'{constants.BOT_PREFIX}getname', '').strip()
         embed = utils.create_embed()
         if 1 <=int(teamnum) <= 3:
@@ -156,7 +145,7 @@ class RiddleCog(commands.Cog):
 
 
     @commands.command(name="getchannels")
-    @commands.has_role("bot-whisperer")
+    @commands.has_role(constants.BOT_WHISPERER)
     async def getchannels(self, ctx):
         """
         Get all channels and team names
@@ -172,15 +161,16 @@ class RiddleCog(commands.Cog):
 
 
     @commands.command(name='addchannel')
-    @commands.has_role("bot-whisperer")
+    @commands.has_role(constants.BOT_WHISPERER)
     async def addchannel(self, ctx):
         """
         Argument to add a team's channel
         Usage: ~addchannel <channel_name> <{1, 2, 3}>
+        Note: use ~addchannel 0 <{1, 2, 3}> to set team's channel to NONE
         """
-        # Remove command
         print("Received ~addchannel")
-        user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}addchannel', '').strip().replace('#', '')
+        # Remove command
+        user_args = ctx.message.content.replace(f'{constants.BOT_PREFIX}addchannel', '').strip().replace('#', '') # TODO: remove replace('#', '')
         print(user_args)
         tokens = user_args.split()
 
@@ -190,24 +180,20 @@ class RiddleCog(commands.Cog):
             embed.add_field(name="Success", value=f"Successfully removed channel from team {int(tokens[1])}")
             await ctx.send(embed=embed)
             return
-        #channel = discord.utils.get(ctx.guild.channels, name=tokens[0].strip())
-        #print(channel.id)
-        #channel = discord.utils.get(ctx.guild.channels, id=int(tokens[0].replace('>', '').replace('<', '')))
+
+        # TODO: better way to do this? Removing brackets seems hacky
         channel = self.bot.get_channel(int(tokens[0].replace('<', '').replace('>', '')))
 
         embed = utils.create_embed()
         if 1 <= int(tokens[1]) <= 3:
             self.team_channel_ids[int(tokens[1])-1] = channel.id
+            embed.add_field(name="Success",
+            value=f"Successfully updated Team {int(tokens[1])}'s channel to {channel}")
         else:
             embed.add_field(name='Incorrect Usage',
             value='Usage: ~addchannel <channel_name> <{1, 2, 3}>')
-            await ctx.send(embed=embed)
-            return
 
-        embed.add_field(name="Success",
-            value=f"Successfully updated Team {int(tokens[1])}'s channel to {channel}")
         await ctx.send(embed=embed)
-
 
     # Command to check the user's answer. They will be replied to telling them whether or not their answer is correct
     @commands.command(name='answer', aliases=['ANSWER'])
@@ -232,11 +218,9 @@ class RiddleCog(commands.Cog):
             await ctx.send(embed=embed)
             return 
         # Remove the command and whitespace from the answer.
-        user_answer = ctx.message.content.replace(f'{constants.BOT_PREFIX}answer', '').strip().replace(' ', '')
-        #embed, result = utils.create_answer_embed(team, user_answer.replace(' ', ''), self.current_answers[team])
-        result = utils.create_answer_embed(team, user_answer, self.current_answers[team])
+        user_answer = ctx.message.content.replace(f'{constants.BOT_PREFIX}answer', '').strip().replace(' ', '') # TODO: strip is redundant since we're replacing all spaces?
+        result = utils.get_answer_result(team, user_answer, self.current_answers[team])
         
-        #await ctx.send(embed=embed, reference=ctx.message, mention_author=True)
         if result == constants.CORRECT:
             await ctx.message.add_reaction(EMOJIS[constants.CORRECT_EMOJI])
         else:
@@ -247,10 +231,9 @@ class RiddleCog(commands.Cog):
         if len(self.current_answers[team]) >= 1:
             return
         # If there are no answers left for the round, then either the team has completed the level, or the team has completed the entire puzzle.
-        
         if self.current_level[team] >= 5:
             # Congratulate Team for solving the puzzle
-            embed = utils.create_solved_embed(team, self.team_names[team], self.answer)
+            embed = utils.create_solved_embed(self.team_names[team], self.answer)
             self.currently_puzzling[team] = False
             print(f"{self.team_names[team]} has solved the puzzle!")
             await ctx.send(embed=embed)
@@ -260,37 +243,34 @@ class RiddleCog(commands.Cog):
             embed = utils.create_level_prep_embed(self.current_level[team], self.team_names[team])
             # Proceed to next level. Perform computation ahead of time.
             self.current_level[team] += 1
+            # Creates all cipher embeds, updates used riddle IDS, and refreshes current answers for the next level.
             embeds, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(self.current_level[team], self.riddles, self.used_riddle_ids[team])
-            # Strip all whitespace from answers
-            # NEW: done in create_riddle_embed
-            #self.current_answers[team] = [answer.replace(' ', '') for answer in self.current_answers[team]]
             
             await ctx.send(embed=embed)
             time = Timer(constants.BREAK_TIME, self.start_new_level, callback_args=(ctx, team, embeds), callback_async=True)
-            #for embed in embeds:
-            #    await ctx.send(embed=embed)
-            # Start the timer again
-            #timer = Timer(constants.TIME_LIMIT, self.send_times_up_message, callback_args=(ctx, team, self.current_level[team]), callback_async=True)
-            #await ctx.send(embeds=embeds)
-        
 
-
-    # Send the ciphers for the next level.
     async def start_new_level(self, ctx, team, embeds):
+        """
+        Send the ciphers for the next level. Used on a timer
+        So the next level is sent out after a predetermined
+        Break time after the previous level was completed.
+        Then, starts the timer for the level to end
+        """
         for embed in embeds:
             await ctx.send(embed=embed)
         timer = Timer(constants.TIME_LIMIT, self.send_times_up_message, callback_args=(ctx, team, self.current_level[team]), callback_async=True)
         return
 
     @commands.command(name='reload', aliases=['RELOAD'])
-    @commands.has_role("bot-whisperer")
+    @commands.has_role(constants.BOT_WHISPERER)
     async def reload_sheet(self, ctx):
         """
-        Reload the Google Sheet so we can update our riddles instantly.
+        Reload the Google Sheet so we can update our ciphers instantly.
+        Usage: ~reload
         """
         self.sheet = self.client.open_by_key(self.sheet_key).sheet1
         self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
-        print(f"{constants.BOT_PREFIX}reload used. Reloaded riddle sheet")
+        print(f"{constants.BOT_PREFIX}reload used. Reloaded cipher sheet")
         embed = utils.create_embed()
         embed.add_field(name="Sheet Reloaded",
         value="Google sheet successfully reloaded")
@@ -303,20 +283,19 @@ class RiddleCog(commands.Cog):
         await self.bot.wait_until_ready()
         while True:
             await asyncio.sleep(3600) # 1 hour
-            #sheet = client.open_by_key(sheet_key).sheet1
             self.sheet = self.client.open_by_key(self.sheet_key).sheet1
             self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
-            print("Reloaded riddle sheet")
+            print("Reloaded cipher sheet on schedule")
 
     # Function to clean the bot's riddle so it can start a new one.
+    # UPDATE: Don't reset used riddle IDs. We have enough. Only do that on a forced ~reset
     def reset_riddle(self, team):
         self.current_level[team] = 1
         self.current_answers[team] = []
-        #self.used_riddle_ids[team] = [] UPDATE: Don't reset used riddle IDs. We have enough. Only do that on a forced ~reset
         self.currently_puzzling[team] = False
 
     @commands.command(name='reset')
-    @commands.has_role("bot-whisperer")
+    @commands.has_role(constants.BOT_WHISPERER)
     async def reset(self, ctx):
         """
         Reset the bot as if it has just loaded up

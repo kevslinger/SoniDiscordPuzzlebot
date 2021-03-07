@@ -9,33 +9,34 @@ from oauth2client.service_account import ServiceAccountCredentials
 def create_embed() -> discord.Embed:
     """
     Create an empty discord embed with color.
+
     :return: (discord.Embed)
     """
     return discord.Embed(color=constants.EMBED_COLOR)
 
 
-def create_level_prep_embed(level, team_name) -> discord.Embed:
+def create_level_prep_embed(level, teamname) -> discord.Embed:
+    """
+    Create an embed to let the team know their next level will start soon.
+    
+    :param level: (int) the level the team just completed.
+    :param teamname: (str) the name of the team
+    :return embed: (discord.Embed) the embed that includes the level-up message.
+    """
     embed = create_embed()
-    embed.add_field(name=f"Level {level} Complete!", value=f"Well done, {team_name}! Level {level+1} will begin in 30 seconds.")
+    embed.add_field(name=f"Level {level} Complete!", value=f"Well done, {teamname}! Level {level+1} will begin in {constants.BREAK_TIME} seconds.")
     return embed
 
-#TODO: Remove this. We'll send this as part of the static puzzle, and 
-# won't need it in the bot itself.
+
 def get_opening_statement(teamname) -> discord.Embed:
     """
     Assemble the opening message to send to the team before their puzzle begins
-    
-    :param team: (int) the team ID of the invoked command
+
+    :param teamname: (str) the team name
     :return embed: (discord.Embed) the embed that includes the welcome message
     """
     embed = create_embed()
-    embed.add_field(name=f"Welcome, {teamname}", value="You have started a new race! Level 1 will start in about 30 seconds from this message! Good luck and have fun!")
-    #embed.add_field(name="Welcome to my Puzzle!", value=f"Welcome, {teamname}! Congratulations on making it this far in the puzzle. " + \
-    #"For this part, you will be tasked with solving ciphers in rapid succession. You will have " + \
-    #f"{constants.TIME_LIMIT} seconds to solve each of {constants.NUM_LEVELS} levels. Each level will increase in difficulty; Level 1 will have " + \
-    #"1 riddle, Level 2 will have 2 riddles... you get the idea. You will need to utilize teamwork and quick wit in order to " + \
-    #"defeat me! Your time will start when you receive the first puzzle, which will happen in about 30 seconds " + \
-    #"after you get this message. Good luck!")
+    embed.add_field(name=f"Welcome, {teamname}", value=f"You have started a new race! Level 1 will start in about {constants.BREAK_TIME} seconds from this message! Good luck and have fun!")
     return embed
 
 
@@ -46,7 +47,7 @@ def create_riddle_embed(level, riddles, used_riddle_ids):
     :param riddles: (pandas.DataFrame) the current set of riddles
     :param used_riddle_ids: (list of int) The list of riddle ids the team has already seen
 
-    :return embed: (discord.Embed) The embed we create for the riddle
+    :return embeds: (list of discord.Embed) The embeds we create for the riddle
     :return used_riddle_ids: (list of int) an updated used_riddle_ids
     :return riddle_answer: (list of str) the answers to the given riddles
     """
@@ -90,42 +91,40 @@ def create_no_riddle_embed() -> discord.Embed:
 
 
 
-def create_answer_embed(team, user_answer, current_answers) -> discord.Embed:
+def get_answer_result(team, user_answer, current_answers) -> str:
     """
-    Create the Discord embed to show when the user makes a guess
+    Return either correct or incorrect based on the team's answer and the list of ciphers.
 
     :param team: (int) the team ID 
     :param user_answer: (str) the answer given by the user
     :param current_answers: (list of str) the remaining answers for that team in the level
 
-    :return embed: (discord.Embed) the embed telling the user whether they answered correctly or not.
+    :return result: (str) either correct or incorrect
     """
-    #embed = create_embed()
     user_answer = user_answer.upper()
     if user_answer in current_answers:
-            #embed.add_field(name=f"Correct for Riddle #{current_answers.index(user_answer)+1}", value=f"{user_answer} is the correct answer! Only {len(current_answers)-1} riddles left for this level!")
             current_answers.pop(current_answers.index(user_answer))
             result = constants.CORRECT
     else:
-        #embed.add_field(name=f"Incorrect!", value=f"{user_answer} is NOT one of the correct answers!")
         result = constants.INCORRECT
 
-    return result #embed, result
+    return result
 
 
-def create_solved_embed(team, team_name, answer) -> discord.Embed:
+def create_solved_embed(teamname, answer) -> discord.Embed:
     """
     Create embed which has the answer to the puzzle.
 
-    :param team: (int) the team ID
+    :param team_name: (str) the name of the team
     :param answer: (str) the puzzle answer
 
     :return embed: (discord.Embed) the embed containing the puzzle answer
     """
     embed = create_embed()
-    embed.add_field(name="Congratulations!", value=f"Congrats, {team_name} on a job well done! You successfully solved all {constants.NUM_LEVELS} levels. Here is the answer to the puzzle", inline=False)
+    embed.add_field(name="Congratulations!", value=f"Congrats, {teamname} on a job well done! You successfully solved all {constants.NUM_LEVELS} levels. Here is the answer to the puzzle", inline=False)
     embed.add_field(name="Puzzle Answer", value=answer)
     return embed
+
 
 def create_gspread_client():
     """
