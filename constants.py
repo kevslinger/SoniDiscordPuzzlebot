@@ -18,3 +18,4 @@ CORRECT_EMOJI = ':white_check_mark:'
 INCORRECT_EMOJI = ':x:'
 BOT_NAME = 'The Bot Who Must Not Be Named'
 BOT_WHISPERER = "bot-whisperer"
+CODE = 'code'

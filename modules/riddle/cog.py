@@ -22,7 +22,7 @@ class RiddleCog(commands.Cog):
         self.current_answers = [[], [], []]
         self.used_riddle_ids = [[], [], []]
         self.currently_puzzling = [False, False, False]
-        self.answer = "SULPHUR VIVE" # TODO: Real answer here
+        self.answer = "SULPHUR VIVE"
         self.team_names = ["Team 1", "Team 2", "Testers"]
         # Set defaults to Arithmancy Team 1, Arithmancy Team 2, and Arithmancy prefect-team-1-bot
         self.team_channel_ids = [817232131373662268, 817232183982948362, 817817797043159100]
@@ -56,7 +56,7 @@ class RiddleCog(commands.Cog):
     @commands.command(name='startrace')
     async def startpuzzle(self, ctx):
         """
-        Start your race! You will have 60 seconds per level to solve the riddles
+        Start your race! You will have 60 seconds per level to solve the codes
         Usage: ~startrace
         """
         team = self.get_team(ctx.channel.id)
@@ -74,18 +74,18 @@ class RiddleCog(commands.Cog):
             self.reset_riddle(team)
             self.currently_puzzling[team] = True
 
-        # Creates the embeds containing the ciphers for that level as well as updates the IDs we're using and the acceptable answers for the level
+        # Creates the embeds containing the codes for that level as well as updates the IDs we're using and the acceptable answers for the level
         embeds, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(1, self.riddles, self.used_riddle_ids)
         self.current_answers[team] = [answer.replace(' ', '') for answer in self.current_answers[team]]
 
         await ctx.send(embed=utils.get_opening_statement(self.team_names[team]))
-        # In a short time, send the ciphers
+        # In a short time, send the codes
         time = Timer(constants.BREAK_TIME, self.start_new_level, callback_args=(ctx, team, embeds), callback_async=True)
 
     async def send_times_up_message(self, ctx, team, level):
         """
-        After X seconds, the team's time is up and if they haven't solved all the riddles,
-        They need to restart their 
+        After X seconds, the team's time is up and if they haven't solved all the codess,
+        They need to restart their race.
         """
         # If there are no answers left, we assume the team solved the round
         if len(self.current_answers[team]) < 1 or self.current_level[team] != level:
@@ -95,8 +95,8 @@ class RiddleCog(commands.Cog):
         print(f"{self.team_names[team]}'s time is up, unlucky.")
         # Create an embed to send to the team. 
         embed = discord.Embed(color=constants.EMBED_COLOR)
-        embed.add_field(name="Time's up!", value=f"Sorry, {self.team_names[team]}! Your time is up. You still had {len(self.current_answers[team])} riddles left to solve for level {level}. If you'd like to re-attempt the puzzle, use the ~startrace command!", inline=False)
-        embed.add_field(name="Answers", value=f"The remaining answers were\n{chr(10).join(self.current_answers[team])}", inline=False)
+        embed.add_field(name="Time's up!", value=f"Sorry, {self.team_names[team]}! Your time is up. You still had {len(self.current_answers[team])} {constants.CODE} left to solve for level {level}. If you'd like to re-attempt the race, use the ~startrace command!", inline=False)
+        embed.add_field(name="Answers", value=f"The answers to the remaining codes were:\n{chr(10).join(self.current_answers[team])}", inline=False)
         await ctx.send(embed=embed)
         self.currently_puzzling[team] = False
         return
@@ -243,7 +243,7 @@ class RiddleCog(commands.Cog):
             embed = utils.create_level_prep_embed(self.current_level[team], self.team_names[team])
             # Proceed to next level. Perform computation ahead of time.
             self.current_level[team] += 1
-            # Creates all cipher embeds, updates used riddle IDS, and refreshes current answers for the next level.
+            # Creates all code embeds, updates used riddle IDS, and refreshes current answers for the next level.
             embeds, self.used_riddle_ids[team], self.current_answers[team] = utils.create_riddle_embed(self.current_level[team], self.riddles, self.used_riddle_ids[team])
             
             await ctx.send(embed=embed)
@@ -251,7 +251,7 @@ class RiddleCog(commands.Cog):
 
     async def start_new_level(self, ctx, team, embeds):
         """
-        Send the ciphers for the next level. Used on a timer
+        Send the codes for the next level. Used on a timer
         So the next level is sent out after a predetermined
         Break time after the previous level was completed.
         Then, starts the timer for the level to end
@@ -265,12 +265,12 @@ class RiddleCog(commands.Cog):
     @commands.has_role(constants.BOT_WHISPERER)
     async def reload_sheet(self, ctx):
         """
-        Reload the Google Sheet so we can update our ciphers instantly.
+        Reload the Google Sheet so we can update our codes instantly.
         Usage: ~reload
         """
         self.sheet = self.client.open_by_key(self.sheet_key).sheet1
         self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
-        print(f"{constants.BOT_PREFIX}reload used. Reloaded cipher sheet")
+        print(f"{constants.BOT_PREFIX}reload used. Reloaded {constants.CODE} sheet")
         embed = utils.create_embed()
         embed.add_field(name="Sheet Reloaded",
         value="Google sheet successfully reloaded")
@@ -285,7 +285,7 @@ class RiddleCog(commands.Cog):
             await asyncio.sleep(3600) # 1 hour
             self.sheet = self.client.open_by_key(self.sheet_key).sheet1
             self.riddles = pd.DataFrame(self.sheet.get_all_values(), columns=constants.COLUMNS)
-            print("Reloaded cipher sheet on schedule")
+            print(f"Reloaded {constants.CODE} sheet on schedule")
 
     # Function to clean the bot's riddle so it can start a new one.
     # UPDATE: Don't reset used riddle IDs. We have enough. Only do that on a forced ~reset
@@ -309,6 +309,16 @@ class RiddleCog(commands.Cog):
             self.currently_puzzling[team] = False
         embed = utils.create_embed()
         embed.add_field(name="Success", value="Bot has been reset. I feel brand new!")
+        await ctx.send(embed=embed)
+
+    @commands.command(name='giveup')
+    @commands.has_role(constants.BOT_WHISPERER)
+    async def giveup(self, ctx):
+        """
+        Give the answer to the team as if they had solved it.
+        Usage: ~giveup
+        """
+        embed = utils.create_solved_embed("Team,", self.answer)
         await ctx.send(embed=embed)
 
 

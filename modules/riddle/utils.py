@@ -55,7 +55,7 @@ def create_riddle_embed(level, riddles, used_riddle_ids):
     embed_list = []
     embed = create_embed()
     embed.add_field(name=f"Level {level}", value=f"Welcome to level {level}! You will have {constants.TIME_LIMIT} " + \
-    f"seconds to solve {level} ciphers, beginning now.", inline=False)
+    f"seconds to solve {level} {constants.CODE}s, beginning now.", inline=False)
     embed_list.append(embed)
     for i in range(level):
         riddle_proposal = riddles.sample()
@@ -67,25 +67,25 @@ def create_riddle_embed(level, riddles, used_riddle_ids):
             if duplicate_counter > 50:
                 break
         embed_list.append(create_embed())
-        embed_list[-1].add_field(name=f"Cipher #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
+        embed_list[-1].add_field(name=f"{constants.CODE.capitalize()} #{i+1}", value=f"{riddle_proposal[constants.RIDDLE].item()}", inline=False)
         embed_list[-1].set_image(url=riddle_proposal[constants.RIDDLE].item())
         riddle_answers.append(riddle_proposal[constants.ANSWER].item().replace(' ', ''))
         used_riddle_ids.append(riddle_proposal.index.item())
     embed_list.append(create_embed())
-    embed_list[-1].add_field(name="Answering", value=f"Use {constants.BOT_PREFIX}answer to make a guess on any of the ciphers.",
+    embed_list[-1].add_field(name="Answering", value=f"Use {constants.BOT_PREFIX}answer to make a guess on any of the {constants.CODE}s.",
                     inline=False)
     return embed_list, used_riddle_ids, riddle_answers
 
 
 def create_no_riddle_embed() -> discord.Embed:
     """
-    Function to create an embed to say there is no riddle
+    Function to create an embed to say there is no code
 
     :return embed: (discord.Embed) The embed we create
     """
     embed = create_embed()
-    embed.add_field(name="No Current Riddle", 
-                    value=f"You haven't started the puzzle. To start, use command {constants.BOT_PREFIX}startrace.",
+    embed.add_field(name=f"No Current {constants.CODE.capitalize()}", 
+                    value=f"You haven't started the race. To start, use command {constants.BOT_PREFIX}startrace.",
                     inline=False)
     return embed
 
@@ -93,7 +93,7 @@ def create_no_riddle_embed() -> discord.Embed:
 
 def get_answer_result(team, user_answer, current_answers) -> str:
     """
-    Return either correct or incorrect based on the team's answer and the list of ciphers.
+    Return either correct or incorrect based on the team's answer and the list of codes.
 
     :param team: (int) the team ID 
     :param user_answer: (str) the answer given by the user
