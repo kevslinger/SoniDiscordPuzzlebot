@@ -312,13 +312,16 @@ class RiddleCog(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='giveup')
-    @commands.has_role(constants.BOT_WHISPERER)
+    #@commands.has_role(constants.BOT_WHISPERER)
     async def giveup(self, ctx):
         """
         Give the answer to the team as if they had solved it.
         Usage: ~giveup
         """
-        embed = utils.create_solved_embed("Team,", self.answer)
+        #embed = utils.create_solved_embed("Team,", self.answer)
+        #await ctx.send(embed=embed)
+        embed = utils.create_embed()
+        embed.add_field(name="Giving up?", value="No! Never give up, never surrender!\n\nIf you need help using the bot, tag @help.\nIf you're unable to complete the race, consider using a hint.")
         await ctx.send(embed=embed)
 
 
