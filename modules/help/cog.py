@@ -20,7 +20,7 @@ class HelpCog(commands.Cog):
     @commands.command(name='help')
     async def fake_help(self, ctx):
         embed = discord.Embed(color=constants.EMBED_COLOR)
-        embed.add_field(name='help', value=f"Welcome to {constants.BOT_NAME}! However, to actually use it, you need to say the right commands! Whenever a puzzle requires you to use the bot, it'll tell you what the correct command to use is!\n\nIf you are still confused on how to use the bot, just tag @{constants.HINT}!")
+        embed.add_field(name='help', value=f"Welcome to {constants.BOT_NAME}! However, to actually use it, you need to say the right commands! Whenever a puzzle requires you to use the bot, it'll tell you what the correct command to use is! (Please do not brute-force the command names)\n\nIf you are still confused on how to use the bot, just tag @{constants.HINT}!")
         await ctx.send(embed=embed)
 
     @commands.command(name='adminhelp')
