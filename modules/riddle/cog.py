@@ -321,7 +321,7 @@ class RiddleCog(commands.Cog):
         #embed = utils.create_solved_embed("Team,", self.answer)
         #await ctx.send(embed=embed)
         embed = utils.create_embed()
-        embed.add_field(name="Giving up?", value="No! Never give up, never surrender!\n\nIf you need help using the bot, tag @help.\nIf you're unable to complete the race, consider using a hint.")
+        embed.add_field(name="Giving up?", value=f"No! Never give up, never surrender!\n\nIf you need help using the bot, tag @{constants.HINT}.\nIf you're unable to complete the race, consider using a {constants.HINT}.")
         await ctx.send(embed=embed)
 
 
