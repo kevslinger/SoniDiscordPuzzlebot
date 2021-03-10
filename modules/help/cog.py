@@ -29,7 +29,7 @@ class HelpCog(commands.Cog):
         embed = discord.Embed(color=constants.EMBED_COLOR)
         embed.add_field(name="startrace", value=f"Start a race.\nUsage: {constants.BOT_PREFIX}startrace\nNeeds to be done in a channel that is given access with {constants.BOT_PREFIX}addchannel", inline=False)
         embed.add_field(name="answer", value=f"Answer a {constants.CODE}.\nUsage: {constants.BOT_PREFIX}answer <your_answer>\nNeeds to be done in the same channel as a currently running race.", inline=False)
-        #embed.add_field(name="giveup", value=f"Returns the solution\nUsage: {constants.BOT_PREFIX}giveup\nNOTE: For emergencies only.")
+        # embed.add_field(name="giveup", value=f"Returns the solution\nUsage: {constants.BOT_PREFIX}giveup\nNOTE: For emergencies only.")
         embed.add_field(name="giveup", value=f"Never give up!\nUsage: ~giveup")
         embed.add_field(name="nameteam", value=f"Name a team.\nUsage: {constants.BOT_PREFIX}nameteam <(1,2,3)> <new_name>\nNote: Team 3 is reserved for testers.", inline=False)
         embed.add_field(name="getname", value=f"Get the name of a team.\nUsage: {constants.BOT_PREFIX}getname <(1,2,3)>", inline=False)
