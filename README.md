@@ -28,7 +28,11 @@ We recommend you create a virtual environment with python 3.7. Then, install dep
 
 `pip install -r requirements.txt`
 
-We include `.sample-env` which are the environment variables used. Most of them are only used for creating the google sheets client, and a few others are used for discord.
+We include `.sample-env` which are the environment variables used (fill them in and rename the file to `.env`). Most of them are only used for creating the google sheets client, and a few others are used for discord. This is a sort of hacky way of getting the google auth info on the heroku machine, since I don't want to put the `client_secret.json` on GitHub. 
+
+[This page](https://github.com/googleapis/google-api-python-client/blob/master/docs/start.md) seems to have good information on how to get `Setup` and `Authentication and authorization`, which should help you get a `client_secret.json`, and then you can copy/paste those values inside the quotes for each value in `.env`.
+
+[This tutorial](https://www.writebots.com/discord-bot-token/) should be a good way to create a bot, get the discord token, and add it to a server to be able to run the bot. After you've done all that, you can run the bot with `python bot.py` and it'll go online in the server.
 
 # Issues
 
