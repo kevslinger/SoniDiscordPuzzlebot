@@ -74,7 +74,7 @@ def create_code_embed(level, codes, used_code_ids):
     embed_list.append(create_embed())
     embed_list[-1].add_field(name="Answering", value=f"Use {constants.BOT_PREFIX}answer to make a guess on any of the {constants.CODE}s.",
                     inline=False)
-    return embed_list, list(set(used_code_ids)), code_answers
+    return embed_list, used_code_ids, code_answers
 
 
 def create_no_code_embed() -> discord.Embed:

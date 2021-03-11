@@ -38,7 +38,7 @@ class CodeCog(commands.Cog):
         # Reload the google sheet every hour
         bot.loop.create_task(self.reload())
             
-    @commands.command(name='startrace')
+    @commands.command(name='startrace', aliases=['StarTrace'])
     async def startpuzzle(self, ctx):
         """
         Start your race! You will have 60 seconds per level to solve the codes
