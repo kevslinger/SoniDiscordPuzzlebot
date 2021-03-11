@@ -162,15 +162,35 @@ class CodeCog(commands.Cog):
     @commands.command(name='pigpenpls')
     async def pigpenpls(self, ctx):
         """
-        Gives specifically a pigpen code
-        Usage: ~pigpenpls
+        Gives a cipher of a specific type
+        Usage: ~pigpenpls <cipher_name>
         """
         print("Received ~pigpenpls")
+        toks = ctx.message.content.split()
+        cipher_abbrev = None
         embed = utils.create_embed()
+        if len(toks) < 2:
+            # pigpen default
+            cipher_abbrev = 'pi'
+        elif len(toks) == 2:
+            for cipher in constants.CIPHERS:
+                if toks[1].lower() == cipher:
+                    cipher_abbrev = toks[1][:2]
+            if cipher_abbrev is None:
+                embed.add_field(name="Incorrect Usage", value="Usage: ~pigpenpls or "
+                                "~pigpenpls <braille, morse, semaphore>")
+                await ctx.send(embed=embed)
+                return
+        else:
+            embed.add_field(name="Incorrect Usage", value="Usage: ~pigpenpls or "
+                            "~pigpenpls <braille, morse, semaphore>")
+            await ctx.send(embed=embed)
+            return
         code_proposal = self.codes.sample()
-        while 'pi' not in code_proposal[constants.CODE].item():
+        while cipher_abbrev not in code_proposal[constants.CODE].item():
             code_proposal = self.codes.sample()
         embed.add_field(name="Pigpen", value=f"{code_proposal[constants.CODE].item()}")
+        embed.add_field(name="Answer", value=f"|| {code_proposal[constants.ANSWER].item()} ||")
         embed.set_image(url=code_proposal[constants.CODE].item())
         await ctx.send(embed=embed)
 
