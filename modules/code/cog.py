@@ -159,6 +159,21 @@ class CodeCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name='pigpenpls')
+    async def pigpenpls(self, ctx):
+        """
+        Gives specifically a pigpen code
+        Usage: ~pigpenpls
+        """
+        print("Received ~pigpenpls")
+        embed = utils.create_embed()
+        code_proposal = self.codes.sample()
+        while 'pi' not in code_proposal[constants.CODE].item():
+            code_proposal = self.codes.sample()
+        embed.add_field(name="Pigpen", value=f"{code_proposal[constants.CODE].item()}")
+        embed.set_image(url=code_proposal[constants.CODE].item())
+        await ctx.send(embed=embed)
+
     # Command to check the user's answer. They will be replied to telling them whether or not their answer is correct
     @commands.command(name='answer')
     async def answer(self, ctx):
