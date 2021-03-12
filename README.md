@@ -1,5 +1,7 @@
 # ARITHMANCY PUZZLEBOT
 
+UPDATE: 3/11/2021 Future Developments for this project will be made in [DiscordCipherRace](https://github.com/kevslinger/DiscordCipherRace)
+
 ~~Soni's super secret discord both which nobody can know about.~~
 
 Discord race puzzlebot! Used as part of a community arithmancy puzzle in March, 2021.
