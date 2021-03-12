@@ -28,6 +28,12 @@ We recommend you create a virtual environment with python 3.7. Then, install dep
 
 `pip install -r requirements.txt`
 
+## Preprocessing
+
+Before starting the bot, we first generated images with words encoded via 4 ciphers (Braille, Morse, Semaphore, and Pigpen). We gathered a set of words from the HP Wiki (scraper code found in `hpwikia`). After finalizing which words we would use, we encoded each word in the 4 ciphers, uploaded them to discord (this can probably be replaced by any other site to store images), and then stored the list of img URLs in a google sheet, along with a unique word ID number and the word that was encoded. The bot takes that sheet in order to supply the users with images as part of the race. The code for these image processing steps can be found in `discord_image_processing`.
+
+## The Race Bot
+
 We include `.sample-env` which are the environment variables used (fill them in and rename the file to `.env`). Most of them are only used for creating the google sheets client, and a few others are used for discord. This is a sort of hacky way of getting the google auth info on the heroku machine, since I don't want to put the `client_secret.json` on GitHub. 
 
 ## Preprocessing
@@ -39,6 +45,7 @@ Before starting the bot, we first generated images with words encoded via 4 ciph
 [This page](https://github.com/googleapis/google-api-python-client/blob/master/docs/start.md) seems to have good information on how to get `Setup` and `Authentication and authorization`, which should help you get a `client_secret.json`, and then you can copy/paste those values inside the quotes for each value in `.env`.
 
 [This tutorial](https://www.writebots.com/discord-bot-token/) should be a good way to create a bot, get the discord token, and add it to a server to be able to run the bot. After you've done all that, you can run the bot with `python bot.py` and it'll go online in the server.
+
 
 # Issues
 
