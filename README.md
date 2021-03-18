@@ -4,6 +4,8 @@
 
 Discord race puzzlebot! Used as part of a community arithmancy puzzle in March, 2021.
 
+NOTICE: This repo is no longer supported. Please see [this repo](https://github.com/kevslinger/DiscordCipherRace) for continued development.
+
 ## Current Comamnds for users
 - `~help` is an uninformative help command 
 - `~codebreaker` is the real help command
